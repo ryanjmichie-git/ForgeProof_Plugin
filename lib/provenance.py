@@ -152,6 +152,24 @@ def _build_manifest(run_state: dict, config: dict) -> dict:
     }
 
 
+def _stage_source_files(
+    files_changed: list[str], repo_root: Path, staging_root: Path
+) -> None:
+    """Copy files_changed from repo_root into SOURCE/ inside the staging directory."""
+    source_dir = staging_root / "SOURCE"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    for rel_path_str in files_changed:
+        # Normalise separators so POSIX paths from run_state work on Windows too.
+        src_file = repo_root / Path(rel_path_str)
+        if not src_file.exists():
+            raise FileNotFoundError(
+                f"files_changed entry not found in repo_root: {rel_path_str}"
+            )
+        dst_file = source_dir / Path(rel_path_str)
+        dst_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_file, dst_file)
+
+
 def build(args: argparse.Namespace) -> None:
     """Execute the build subcommand: stage, sign, and pack an .rpack bundle."""
 
@@ -159,6 +177,7 @@ def build(args: argparse.Namespace) -> None:
     run_state_path = Path(args.run_state)
     decision_log_path = Path(args.decision_log)
     output_path = Path(args.output)
+    repo_root = Path(args.repo_root)
 
     run_state = _read_json_file(run_state_path)
 
@@ -191,6 +210,11 @@ def build(args: argparse.Namespace) -> None:
         # Write verify instructions
         (staging_root / "VERIFY" / "verify_instructions.txt").write_text(
             VERIFY_INSTRUCTIONS, encoding="utf-8"
+        )
+
+        # Stage changed source files into SOURCE/ so they are hashed and signed.
+        _stage_source_files(
+            run_state.get("files_changed", []), repo_root, staging_root
         )
 
         # 5. Finalize pack metadata (computes HASHES.json and root digest)
