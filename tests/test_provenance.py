@@ -121,3 +121,43 @@ def test_nonexistent_file_in_files_changed_raises(tmp_path):
     args = _build_args(tmp_path, repo_root, files_changed=["src/ghost.py"])
     with pytest.raises((FileNotFoundError, OSError)):
         provenance.build(args)
+
+
+# ── Issue #3: image_digest must reflect actual environment, not hardcoded zeros ──
+
+
+def test_image_digest_is_not_hardcoded_zeros(tmp_path):
+    """MANIFEST.json environment.image_digest must not be the all-zeros placeholder."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+
+    args = _build_args(tmp_path, repo_root, files_changed=[])
+    provenance.build(args)
+
+    extract_dir = tmp_path / "extracted"
+    extract_rpack(args.output, str(extract_dir))
+
+    manifest = json.loads((extract_dir / "MANIFEST.json").read_text(encoding="utf-8"))
+    image_digest = manifest["environment"]["image_digest"]
+    assert image_digest != "sha256:" + "0" * 64, (
+        "image_digest should not be the hardcoded all-zeros placeholder"
+    )
+
+
+def test_image_digest_format_is_sha256_prefixed(tmp_path):
+    """MANIFEST.json environment.image_digest must follow 'sha256:<hex>' format."""
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+
+    args = _build_args(tmp_path, repo_root, files_changed=[])
+    provenance.build(args)
+
+    extract_dir = tmp_path / "extracted"
+    extract_rpack(args.output, str(extract_dir))
+
+    manifest = json.loads((extract_dir / "MANIFEST.json").read_text(encoding="utf-8"))
+    image_digest = manifest["environment"]["image_digest"]
+    assert image_digest.startswith("sha256:"), "image_digest must start with 'sha256:'"
+    hex_part = image_digest[len("sha256:"):]
+    assert len(hex_part) == 64, "image_digest sha256 part must be 64 hex chars"
+    assert all(c in "0123456789abcdef" for c in hex_part), "image_digest must be lowercase hex"

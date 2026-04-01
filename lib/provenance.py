@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import shutil
 import sys
 import tempfile
@@ -20,6 +21,18 @@ from rpb.hash import sha256_bytes
 from rpb.pack_writer import create_rpack
 from rpb.sign import write_signatures
 from rpb.staging import DEFAULT_POLICY_FALLBACK, finalize_pack_metadata
+
+
+def _compute_image_digest() -> str:
+    """Compute a SHA-256 digest representing the current runtime environment."""
+    env_info = {
+        "python_version": platform.python_version(),
+        "python_implementation": platform.python_implementation(),
+        "system": platform.system(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+    }
+    return "sha256:" + sha256_bytes(dumps_canonical(env_info))
 
 
 VERIFY_INSTRUCTIONS = (
@@ -117,8 +130,8 @@ def _build_manifest(run_state: dict, config: dict) -> dict:
         "claims": _build_claims(run_state),
         "environment": {
             "type": "agent",
-            "image_digest": "sha256:" + "0" * 64,
-            "os_arch": "linux/amd64",
+            "image_digest": _compute_image_digest(),
+            "os_arch": f"{platform.system().lower()}/{platform.machine().lower()}",
             "toolchain": [],
         },
         "commands": _build_commands(run_state),
