@@ -52,7 +52,17 @@ Located in `harness/` — based on Anthropic's engineering blog for long-running
 - `handoff-template.md` — structured Generator → Evaluator handoff format
 - `run.sh` — orchestration script
 
-**To use:** `./harness/run.sh full "your brief description"`
+**Slash commands (primary — use these in VS Code):**
+
+- `/harness-plan <brief>` — Planner: converts brief into spec.md
+- `/harness-generate` — Generator: implements spec.md, writes sprint-contract-NN.md + harness/handoff.md
+- `/harness-evaluate` — Evaluator: tests against current sprint contract + criteria, writes harness/eval-report.md
+- `/harness-fix` — Generator fix pass: addresses bugs from eval-report.md
+
+**Workflow:** Plan → review spec → Generate (with sprint contracts) → Evaluate → Fix (if needed) → re-Evaluate
+**Key rule:** Start a new conversation between phases for clean context.
+
+**Shell alternative (reference):** `./harness/run.sh full "your brief description"`
 
 ## Related Repos
 
