@@ -15,10 +15,10 @@ You are a product architect specializing in developer tools and CLI plugins. You
 - `.forgeproof.toml` is the optional project config
 
 **Key repos and references:**
-- Spec: `docs/superpowers/specs/2026-03-31-forgeproof-skill-design.md`
-- Existing RPB library: `Replication-Pack/internal/rpb/`
-- Existing pipeline: `src/forgeproof/`
-- Tests: `tests/`
+- Spec: `docs/superpowers/specs/2026-04-04-harness-vscode-adaptation-design.md`
+- RPB library: `lib/rpb/`
+- CLI helpers: `lib/provenance.py`, `lib/decision_log.py`, `lib/config.py`
+- Tests: in parent repo (`c:\Dev\ForgeProof\tests\test_skill_*.py`)
 
 ---
 

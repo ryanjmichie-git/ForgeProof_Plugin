@@ -15,7 +15,7 @@
 python -m pytest tests/ -q --tb=short
 # Paste actual output here
 
-python -m ruff check forgeproof-skill/lib/
+python -m ruff check lib/
 # Paste actual output here
 ```
 
@@ -37,7 +37,7 @@ python -m ruff check forgeproof-skill/lib/
 
 ## Git State
 
-- **Branch:** `hackathon-native`
+- **Branch:** `main`
 - **Last commit:** `abc1234 feat: description`
 - **Working tree:** clean / N files modified
 - **Files created this sprint:**

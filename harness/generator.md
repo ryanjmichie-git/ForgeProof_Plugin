@@ -10,26 +10,25 @@ You are a senior Python engineer implementing a Claude Code skill. Your job is t
 
 **Codebase layout:**
 ```
-ForgeProof/
-├── harness/                    # Agent prompts (do not modify)
-├── docs/superpowers/specs/     # Design specs
-├── Replication-Pack/internal/  # Source RPB library (reference, copy from here)
-├── src/forgeproof/             # Original CI pipeline (reference, do not modify)
-├── tests/                      # Unit tests
-├── forgeproof-skill/           # YOUR WORK AREA — the skill package
-│   ├── commands/               # Claude Code command prompts (.md)
-│   ├── lib/                    # Python helper scripts (stdlib only)
-│   │   └── rpb/                # Crypto/signing library
-│   ├── templates/              # PR templates
-│   └── install.sh              # Install script
-└── spec.md                     # The spec you implement against
+FORGEPROOF_SKILL2/
+├── commands/               # Claude Code command prompts (.md)
+├── lib/                    # Python helper scripts (stdlib only)
+│   ├── rpb/                # Crypto/signing library (Ed25519, SHA-256, .rpack)
+│   ├── provenance.py       # CLI: builds + signs .rpack bundles
+│   ├── decision_log.py     # CLI: appends hash-chained audit log entries
+│   └── config.py           # Loads .forgeproof.toml with defaults
+├── harness/                # Agent prompts, criteria, handoff template
+├── templates/              # PR description template
+├── install.sh / install.ps1
+├── spec.md                 # Written by Planner, you implement this
+└── CLAUDE.md               # Project instructions
 ```
 
 ---
 
 ## Tech Stack Constraints
 
-- **Python 3.11+ stdlib ONLY** — no pip dependencies in `forgeproof-skill/lib/`
+- **Python 3.11+ stdlib ONLY** — no pip dependencies in `lib/`
 - **Imports:** All `rpb/` internal imports use relative form: `from rpb.canon import ...` (not `from internal.canon import ...`)
 - **`lib/` is added to `sys.path` at runtime** by each CLI entry point
 - **Config:** TOML via `tomllib` (stdlib in 3.11+)
@@ -83,7 +82,7 @@ After completing each major feature (or when context is getting long), write a h
 
 ## Test Status
 - `python -m pytest tests/ -q` — X passed, Y failed
-- `python -m ruff check forgeproof-skill/lib/` — clean / N issues
+- `python -m ruff check lib/` — clean / N issues
 
 ## Remaining Work
 - [ ] Next feature from spec
@@ -103,8 +102,7 @@ After completing each major feature (or when context is getting long), write a h
 
 ## What NOT To Do
 
-- Do NOT modify files in `Replication-Pack/internal/` — copy what you need into `forgeproof-skill/lib/rpb/`
-- Do NOT modify files in `src/forgeproof/` — that's the original CI pipeline
+- Do NOT modify files outside this repo
 - Do NOT add pip dependencies to the skill lib
 - Do NOT create documentation files unless the spec requires them
 - Do NOT self-evaluate — that's the Evaluator's job. If something seems off, note it in the handoff and move on

@@ -14,7 +14,7 @@ You are a skeptical QA engineer. Your job is to find problems, not praise. You t
 1. `spec.md` — what was supposed to be built
 2. `harness/criteria.md` — grading criteria and thresholds
 3. `harness/handoff.md` — what the Generator says it built
-4. `docs/superpowers/specs/2026-03-31-forgeproof-skill-design.md` — the design spec
+4. `docs/superpowers/specs/2026-04-04-harness-vscode-adaptation-design.md` — the design spec
 
 ---
 
@@ -26,25 +26,25 @@ Run these commands and verify they succeed:
 
 ```bash
 # Tests pass
-python -m pytest tests/ -q --tb=short
+python -m pytest "c:\Dev\ForgeProof\tests" -q -k "test_skill" --tb=short
 
 # Linter clean
-python -m ruff check forgeproof-skill/lib/
+python -m ruff check lib/
 
 # CLI entry points work
-python forgeproof-skill/lib/provenance.py --help
-python forgeproof-skill/lib/decision_log.py --help
+python lib/provenance.py --help
+python lib/decision_log.py --help
 
 # RPB imports work
-python -c "import sys; sys.path.insert(0, 'forgeproof-skill/lib'); from rpb.ed25519 import sign, derive_public_key; print('RPB OK')"
+python -c "import sys; sys.path.insert(0, 'lib'); from rpb.ed25519 import sign, derive_public_key; print('RPB OK')"
 ```
 
 If any smoke test fails, stop and file a critical bug. Do not proceed to deeper testing.
 
 ### Step 2: Unit Test Coverage
 
-- Check that every Python module in `forgeproof-skill/lib/` has corresponding test coverage
-- Run `python -m pytest tests/ -v` and verify no tests are skipped or xfailed without reason
+- Check that every Python module in `lib/` has corresponding test coverage
+- Run `python -m pytest "c:\Dev\ForgeProof\tests" -v -k "test_skill"` and verify no tests are skipped or xfailed without reason
 - Check edge cases: empty inputs, missing files, malformed config
 
 ### Step 3: Integration Tests
@@ -53,8 +53,8 @@ Test the actual pipeline components:
 
 ```bash
 # Decision log append + hash chain
-python forgeproof-skill/lib/decision_log.py append --log /tmp/test.jsonl --phase test --action tested --detail "test entry"
-python forgeproof-skill/lib/decision_log.py append --log /tmp/test.jsonl --phase test --action tested --detail "second entry"
+python lib/decision_log.py append --log /tmp/test.jsonl --phase test --action tested --detail "test entry"
+python lib/decision_log.py append --log /tmp/test.jsonl --phase test --action tested --detail "second entry"
 # Verify: second entry's prev_hash matches first entry's entry_hash
 
 # Provenance build (with mock data)
@@ -65,7 +65,7 @@ python forgeproof-skill/lib/decision_log.py append --log /tmp/test.jsonl --phase
 
 # Ed25519 ephemeral keygen + sign + verify round-trip
 python -c "
-import sys; sys.path.insert(0, 'forgeproof-skill/lib')
+import sys; sys.path.insert(0, 'lib')
 from rpb.ed25519 import sign, derive_public_key, verify
 import os
 key = os.urandom(32)
@@ -79,7 +79,7 @@ print('Ed25519 round-trip OK')
 
 ### Step 4: Command Prompts Review
 
-Read each `.claude/commands/*.md` file (or `forgeproof-skill/commands/*.md`) and verify:
+Read each `commands/*.md` file and verify:
 - The prompt clearly instructs Claude through all pipeline phases
 - Phase boundaries are explicit (Claude knows when to transition)
 - Decision log append commands use the correct CLI syntax
