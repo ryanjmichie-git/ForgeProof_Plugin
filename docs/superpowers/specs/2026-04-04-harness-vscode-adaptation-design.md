@@ -53,10 +53,12 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 
 | File | Description |
 |------|-------------|
-| `.claude/commands/harness-plan.md` | Planner slash command — converts brief to spec.md |
-| `.claude/commands/harness-generate.md` | Generator slash command — implements spec.md |
-| `.claude/commands/harness-evaluate.md` | Evaluator slash command — tests and grades implementation |
-| `.claude/commands/harness-fix.md` | Generator fix pass — addresses bugs from eval-report.md |
+| `commands/harness-plan.md` | Planner slash command — converts brief to spec.md |
+| `commands/harness-generate.md` | Generator slash command — implements spec.md |
+| `commands/harness-evaluate.md` | Evaluator slash command — tests and grades implementation |
+| `commands/harness-fix.md` | Generator fix pass — addresses bugs from eval-report.md |
+
+Note: Placed in `commands/` alongside existing ForgeProof commands (`forgeproof.md`, `forgeproof-push.md`, `forgeproof-verify.md`) for consistency. The `.claude/` directory is not used for commands in this repo.
 
 ### Unchanged Files
 
@@ -64,10 +66,6 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 |------|--------|
 | `harness/harness-design-action-plan.md` | Source methodology reference — no changes needed |
 | `harness/criteria.md` | Grading criteria are domain-correct for this repo |
-| `harness/handoff-template.md` | Handoff format is good as-is |
-| `harness/planner.md` | Kept as reference doc (canonical version is now the slash command) |
-| `harness/generator.md` | Kept as reference doc |
-| `harness/evaluator.md` | Kept as reference doc |
 | `harness/run.sh` | Kept for reference — no longer primary invocation method |
 
 ### Modified Files
@@ -75,6 +73,12 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 | File | Change |
 |------|--------|
 | `CLAUDE.md` | Add Harness Commands section documenting the workflow |
+| `harness/planner.md` | Update stale paths to match this repo layout (reference doc, not canonical) |
+| `harness/generator.md` | Update stale paths and codebase layout tree (reference doc, not canonical) |
+| `harness/evaluator.md` | Update stale paths in smoke tests and integration tests (reference doc, not canonical) |
+| `harness/handoff-template.md` | Update `forgeproof-skill/lib/` → `lib/` in example commands |
+
+Note: The slash commands in `commands/` are canonical. The `harness/*.md` files are updated to avoid confusion but serve as reference docs only.
 
 ---
 
@@ -98,11 +102,27 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 
 ### `/harness-generate`
 
+**Arguments:** None
+
 **Pre-flight:** Verify `spec.md` exists. If not, tell user to run `/harness-plan` first.
 
 **Prompt structure:**
 1. Role: "You are a senior Python engineer implementing a Claude Code skill."
-2. Project context: Repo layout with correct paths (`lib/`, `lib/rpb/`, `commands/`, `templates/`)
+2. Project context: Embed this corrected repo layout tree:
+   ```
+   FORGEPROOF_SKILL2/
+   ├── commands/               # Claude Code command prompts (.md)
+   ├── lib/                    # Python helper scripts (stdlib only)
+   │   ├── rpb/                # Crypto/signing library (Ed25519, SHA-256, .rpack)
+   │   ├── provenance.py       # CLI: builds + signs .rpack bundles
+   │   ├── decision_log.py     # CLI: appends hash-chained audit log entries
+   │   └── config.py           # Loads .forgeproof.toml with defaults
+   ├── harness/                # Agent prompts, criteria, handoff template
+   ├── templates/              # PR description template
+   ├── install.sh / install.ps1
+   ├── spec.md                 # Written by Planner, you implement this
+   └── CLAUDE.md               # Project instructions
+   ```
 3. Tech constraints: Python 3.11+ stdlib only, `from rpb.X import Y` imports, TOML config via tomllib
 4. Code style: Type hints, one-line docstrings on public functions, no classes where functions suffice, pathlib, f-strings, no bare except
 5. Git discipline: Commit after each feature, conventional prefixes (feat:/fix:/etc.), never commit broken code
@@ -115,6 +135,8 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 
 ### `/harness-evaluate`
 
+**Arguments:** None
+
 **Pre-flight:** Verify `spec.md` and `harness/handoff.md` exist.
 
 **Prompt structure:**
@@ -125,10 +147,10 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
    - `python -c "import sys; sys.path.insert(0, 'lib'); from rpb.ed25519 import sign, derive_public_key; print('RPB OK')"`
    - `python lib/provenance.py --help`
    - `python lib/decision_log.py --help`
-   - Tests: `python -m pytest "c:\Dev\ForgeProof\tests" -q -k "test_skill"` (tests live in parent repo)
+   - Tests: `python -m pytest "c:\Dev\ForgeProof\tests" -q -k "test_skill"` (tests live in parent repo — this is a machine-local path; portability is a known limitation until tests move into this repo)
 4. Step 2 — Unit test coverage check
 5. Step 3 — Integration tests (decision log hash chain, Ed25519 round-trip, config loading)
-6. Step 4 — Command prompt review (read `commands/*.md`, verify correctness)
+6. Step 4 — Command prompt review (read `commands/*.md` — both ForgeProof skill commands and harness commands)
 7. Step 5 — Grade against `harness/criteria.md` (5 criteria, scored 1-10)
 8. Output: Write `harness/eval-report.md` with scores table, PASS/FAIL, and bug reports
 9. Anti-patterns: No praise without evidence, no skipping tests, no trusting the handoff, no grading on effort
@@ -137,6 +159,8 @@ The Planner, Generator, and Evaluator roles are unchanged. Only the invocation m
 **Output artifact:** `harness/eval-report.md`
 
 ### `/harness-fix`
+
+**Arguments:** None
 
 **Pre-flight:** Verify `harness/eval-report.md` exists.
 
@@ -190,7 +214,7 @@ Add the following section:
 - **Automatic chaining** — we do NOT auto-run the next phase. User controls sequencing.
 - **Playwright/browser testing** — ForgeProof is a CLI skill, not a web app. Evaluator uses CLI commands.
 - **Sprint contracts** — useful for multi-sprint builds, but overkill for initial deployment. Can add later.
-- **Modifying harness/*.md files** — they stay as reference. Slash commands are canonical.
+- **Artifact archival** — previous `spec.md` / `eval-report.md` are overwritten on re-run. Archival is a future consideration.
 
 ---
 
