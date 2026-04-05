@@ -42,13 +42,17 @@ A Claude Code skill (`/forgeproof`) that converts GitHub issues into working cod
 
 ## Harness (Three-Agent Architecture)
 
-The parent repo (`c:\Dev\ForgeProof\harness/`) has a three-agent development harness based on Anthropic's engineering blog:
+Located in `harness/` — based on Anthropic's engineering blog for long-running app development.
+
+- `harness-design-action-plan.md` — source methodology and instructions to follow
 - `planner.md` — converts brief → spec
 - `generator.md` — implements spec with git discipline
 - `evaluator.md` — skeptical QA, grades against criteria
+- `criteria.md` — 5 grading criteria with pass/fail thresholds
+- `handoff-template.md` — structured Generator → Evaluator handoff format
 - `run.sh` — orchestration script
 
-Reference guidance: `C:\Users\User\Desktop\Best Practices\Harness Design - Action Plan.md`
+**To use:** `./harness/run.sh full "your brief description"`
 
 ## Related Repos
 
