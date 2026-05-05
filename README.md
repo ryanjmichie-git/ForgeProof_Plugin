@@ -7,7 +7,9 @@ When you invoke ForgeProof, Claude reads a GitHub issue, extracts requirements, 
 ## Installation
 
 ```
-claude plugin install forgeproof
+# In Claude Code:
+/plugin marketplace add anthropics/claude-plugins-community
+/plugin install forgeproof@claude-plugins-community
 ```
 
 ## Requirements
