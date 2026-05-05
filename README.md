@@ -4,12 +4,23 @@ Turn GitHub issues into working code with cryptographically signed provenance bu
 
 When you invoke ForgeProof, Claude reads a GitHub issue, extracts requirements, plans an implementation, writes code and tests, then packages everything into a tamper-evident `.rpack` bundle. The bundle proves what was done, why, and that nothing was altered after signing.
 
-## Installation
+## Install
+
+In Claude Code:
 
 ```
-# In Claude Code:
 /plugin marketplace add anthropics/claude-plugins-community
-/plugin install forgeproof@claude-plugins-community
+/plugin install forgeproof@claude-community
+/reload-plugins
+```
+
+Or browse interactively: run `/plugin`, go to the **Discover** tab, search for `forgeproof`, press Enter, and choose your install scope.
+
+Prefer the CLI? Same commands without the leading slash:
+
+```bash
+claude plugin marketplace add anthropics/claude-plugins-community
+claude plugin install forgeproof@claude-community
 ```
 
 ## Requirements
