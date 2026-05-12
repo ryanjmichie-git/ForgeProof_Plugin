@@ -522,6 +522,44 @@ class TestCmdSummary:
             fp.cmd_summary(args)
 
 
+class TestCmdGatePr:
+    """PreToolUse hook gate for 'gh pr create'."""
+
+    def _run_gate(self, event: dict | str | None) -> int:
+        stdin_text = "" if event is None else (
+            event if isinstance(event, str) else json.dumps(event)
+        )
+        with patch("sys.stdin", new=__import__("io").StringIO(stdin_text)):
+            with pytest.raises(SystemExit) as exc_info:
+                fp.cmd_gate_pr(MagicMock())
+        code = exc_info.value.code
+        return 0 if code is None else code
+
+    def test_allows_when_bundle_exists(self, tmp_chain_dir):
+        (tmp_chain_dir / "issue-1.rpack").write_text("{}")
+        event = {"tool_name": "Bash", "tool_input": {"command": "gh pr create --fill"}}
+        assert self._run_gate(event) == 0
+
+    def test_blocks_when_no_bundle(self, tmp_chain_dir, capsys):
+        event = {"tool_name": "Bash", "tool_input": {"command": "gh pr create --fill"}}
+        assert self._run_gate(event) == 2
+        assert "BLOCK" in capsys.readouterr().err
+
+    def test_allows_unrelated_bash_command(self, tmp_chain_dir):
+        event = {"tool_name": "Bash", "tool_input": {"command": "ls -la"}}
+        assert self._run_gate(event) == 0
+
+    def test_allows_non_bash_tool(self, tmp_chain_dir):
+        event = {"tool_name": "Edit", "tool_input": {"file_path": "/tmp/x"}}
+        assert self._run_gate(event) == 0
+
+    def test_allows_when_stdin_unparseable(self, tmp_chain_dir):
+        assert self._run_gate("not json {") == 0
+
+    def test_allows_when_stdin_empty(self, tmp_chain_dir):
+        assert self._run_gate("") == 0
+
+
 # ---------------------------------------------------------------------------
 # Integration test (requires ssh-keygen)
 # ---------------------------------------------------------------------------
