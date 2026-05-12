@@ -14,6 +14,7 @@ Subcommands:
     summary     Output PR-ready summary for an issue
     issues      List open GitHub issues assigned to current user
     lint        Run detected linter (used by PostToolUse hook)
+    gate-pr     PreToolUse gate that blocks 'gh pr create' without a bundle
 """
 
 from __future__ import annotations
@@ -974,6 +975,42 @@ def cmd_reset(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Subcommand: gate-pr (PreToolUse hook)
+# ---------------------------------------------------------------------------
+
+
+def cmd_gate_pr(_args: argparse.Namespace) -> None:
+    """PreToolUse gate: block 'gh pr create' if no .rpack bundle exists.
+
+    Reads the hook event JSON from stdin. Exits 0 when the call should be
+    allowed (event unparseable, tool other than Bash, command not 'gh pr
+    create', or a bundle already exists in .forgeproof/). Exits 2 — Claude
+    Code's "block and surface stderr" code — when blocking.
+    """
+    try:
+        event = json.loads(sys.stdin.read())
+    except (json.JSONDecodeError, ValueError):
+        sys.exit(0)
+
+    tool = event.get("tool_name", "")
+    cmd = event.get("tool_input", {}).get("command", "")
+
+    if tool != "Bash" or "gh pr create" not in cmd:
+        sys.exit(0)
+
+    if list(CHAIN_DIR.glob("*.rpack")):
+        sys.exit(0)
+
+    print(
+        "BLOCK: No .rpack bundle found in .forgeproof/. "
+        "Run /forgeproof first to generate a provenance bundle, "
+        "then use /forgeproof-push to create the PR.",
+        file=sys.stderr,
+    )
+    sys.exit(2)
+
+
+# ---------------------------------------------------------------------------
 # Argument parser
 # ---------------------------------------------------------------------------
 
@@ -1031,6 +1068,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--issue", help="Issue number to clean up")
     p.add_argument("--all", action="store_true", help="Clean up all issues")
 
+    # gate-pr (consumes hook event JSON on stdin; no flags)
+    sub.add_parser("gate-pr", help="PreToolUse gate for 'gh pr create'")
+
     return parser
 
 
@@ -1054,6 +1094,7 @@ def main() -> None:
         "issues": cmd_issues,
         "lint": cmd_lint,
         "reset": cmd_reset,
+        "gate-pr": cmd_gate_pr,
     }
 
     handler = dispatch.get(args.command)
